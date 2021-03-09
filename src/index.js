@@ -30,12 +30,35 @@ function checksCreateTodosUserAvailability(request, response, next) {
   } else if (user.todos.length < 10) {
     return next();
   }
-  
+
   return response.status(403).json({ error: 'You cannot create a new task because it is on the free plan and has more than 10 tasks already created.' });
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const isUuid = validate(id);
+  const user = users.find(user => user.username === username);
+
+  if (!user) {
+    return response.status(404).json({ error: 'There is no user with this username.' });
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if (!isUuid) {
+    return response.status(400).json({ error: 'Invalid ID. Must be UUID.' });
+  }
+
+  if (!todo) {
+    return response.status(404).json({ error: 'There is no todo with this id.' });
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
